@@ -1,0 +1,52 @@
+Service Discovery – Clean, Generic Notes from the Provided Output (No flags, no room-specific names)
+1. Start with the Basics
+Bashnmap 10.49.144.20
+
+Scans only the top 1000 most common TCP ports
+Quick way to spot obvious services (SSH on 22, HTTP on 80, etc.)
+Often misses the interesting stuff
+
+2. Never Stop at 1000 Ports – Scan Everything
+Bashnmap -p- --script=banner 10.49.144.20
+
+-p- → scans all 65 535 TCP ports
+--script=banner → grabs the first few bytes services send (version detection without -sV)
+Revealed two hidden services:
+FTP running on a non-standard high port (21212)
+Custom application listening on another high port (25251)
+
+
+3. Interact with Non-Standard Services
+
+FTP on weird port → still works with the normal ftp clientBashftp 10.49.144.20 21212
+anonymous login → ls → get file
+Custom TCP service → use Netcat, the universal network Swiss army knifeBashnc -v 10.49.144.20 25251Send HELP, ?, or just hit Enter – many home-grown services spill useful info immediately.
+
+4. Remember UDP Exists
+Bashnmap -sU 10.49.144.20
+
+UDP scanning is slower and noisier, but sometimes the only open UDP port (e.g. 53/DNS) holds secrets
+Once you find DNS running, query it directly:Bashdig @10.49.144.20 TXT anything.you.want +short
+
+5. Once You’re Inside – On-Host Enumeration Beats External Scanning
+Bashss -tunlp          # modern replacement for netstat -tunlp
+
+Shows every listening socket and which address it’s bound to
+Services on 0.0.0.0 → reachable from the network
+Services on 127.0.0.1 → only accessible locally (MySQL 3306, internal web servers on 8000, etc.)
+
+6. Localhost Services Are Low-Hanging Fruit
+Example: MySQL on 127.0.0.1:3306
+Bashmysql -D database_name -e "show tables;"
+mysql -D database_name -e "select * from interesting_table;"
+Many production databases allow password-less root login from localhost → instant data access after you get a shell or web console.
+Core Takeaways (Universal Truths)
+
+Always scan all TCP ports (-p-) and at least top UDP ports
+Banner grabbing is free intel – use it early
+Netcat is your best friend for anything that isn’t HTTP/FTP/SSH
+UDP port 53 often leaks data via TXT records
+Once inside, ss/lsof + localhost clients (mysql, psql, redis-cli) are gold
+Services love hiding on high ports – never trust the “top 1000 only” mindset
+
+Keep these steps in muscle memory and you’ll never get stuck on “I see open ports… now what?” a
