@@ -1,0 +1,149 @@
+SCADA = central control system bridging humans and machines in industrial operations.
+
+PLC = rugged industrial computer executing real-time control logic 24/7.
+
+Modbus = simple, legacy industrial protocol (request/response) with no security by design.
+
+Modbus TCP uses port 502 and typically requires no authentication.
+
+Writable elements:
+
+Coils → boolean control flags (on/off)
+
+Holding Registers → numeric configuration values
+
+Read-only elements:
+
+Discrete Inputs and Input Registers
+
+Zero-indexed addressing: address 0 is the first register/coil.
+
+Typical attack vector: direct Modbus access → read/write coils & registers → manipulate physical processes.
+
+Common weaknesses: legacy software, default creds, plaintext traffic, flat networks.
+
+ICS attacks have physical impact, not just data loss.
+
+Order of operations matters in ICS remediation—wrong sequence can trigger safety mechanisms or traps.
+
+Disable protections before changes if safeguards/monitoring coils are active.
+
+Recon first, then remediate: always read system state before writing.
+
+Logging & verification coils are critical for detection and recovery.
+
+Visual monitoring (CCTV/HMI) helps confirm logical changes in real time.
+
+Lesson: Treat Modbus/SCADA systems as high-risk—protect with network segmentation, firewalls, VPNs, and strict change control.
+Modbus – key details (revision)
+
+What Modbus is
+
+Industrial communication protocol (created 1979) for PLCs, sensors, and actuators
+
+Simple client/server (master/slave) request–response model
+
+Designed for reliability, not security
+
+Transport types
+
+Modbus TCP → runs over TCP/IP, port 502
+
+Modbus RTU / ASCII → serial (RS-232 / RS-485)
+
+Security characteristics
+
+❌ No authentication
+
+❌ No encryption (plaintext)
+
+❌ No authorisation
+
+❌ Minimal integrity checks
+➡ Anyone with network access can read/write values
+
+Data model (4 object types)
+
+Type	Access	Description	Typical use
+Coils	Read/Write	1-bit digital outputs	Start motor, enable alarm
+Discrete Inputs	Read-only	1-bit digital inputs	Button pressed, door open
+Holding Registers	Read/Write	16-bit values (0–65535)	Setpoints, modes
+Input Registers	Read-only	16-bit values	Sensor readings
+
+Addressing
+
+Zero-based (address 0 = first item)
+
+Documentation often causes confusion by mixing 0- vs 1-based numbering
+
+Example:
+
+HR0 → first holding register
+
+C10 → coil address 10
+
+Common Modbus function codes
+
+01 – Read Coils
+
+02 – Read Discrete Inputs
+
+03 – Read Holding Registers
+
+04 – Read Input Registers
+
+05 – Write Single Coil
+
+06 – Write Single Holding Register
+
+0F – Write Multiple Coils
+
+10 – Write Multiple Holding Registers
+
+Typical Modbus TCP flow
+
+Client connects to PLC on port 502
+
+Client sends request (function code + address + count/value)
+
+PLC replies with requested data or confirmation
+
+No login, no session security
+
+Why attackers like Modbus
+
+Direct control of physical processes
+
+Easy to script (Python, pymodbus, etc.)
+
+Legacy systems rarely monitored
+
+Flat IT/OT networks expose PLCs
+
+Common attack actions
+
+Change holding registers (modes, setpoints, routing)
+
+Flip coils (disable safety, logging, verification)
+
+Read registers for reconnaissance
+
+Plant “logic traps” via coil dependencies
+
+Defensive best practices
+
+Block port 502 at network boundaries
+
+Use OT firewalls & Modbus gateways
+
+Network segmentation (IT ≠ OT)
+
+VPN + jump hosts for remote access
+
+Monitor Modbus traffic for anomalies
+
+Strict change management & logging
+
+Key takeaway
+
+Modbus works because it’s simple — and it’s dangerous for the exact same reason.
